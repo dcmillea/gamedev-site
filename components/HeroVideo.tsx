@@ -13,7 +13,7 @@ export default function HeroVideo() {
   }, []);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-28">
+    <section className="mx-auto max-w-7xl px-4 pt-6 md:pt-28">
       <div className="relative h-[78vh] min-h-135 w-full overflow-hidden rounded-3xl border border-border">
         <video ref={ref} className="h-full w-full object-cover" autoPlay muted loop playsInline preload="metadata">
           <source src={"/hero.webm"} type="video/webm" />
