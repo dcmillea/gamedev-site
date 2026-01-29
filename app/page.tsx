@@ -1,7 +1,9 @@
-export default function Home() {
+import HeroVideo from "@/components/HeroVideo";
+
+export default function HomePage() {
   return (
-    <>
-      <div className="flex">uh, yea yo!</div>
-    </>
+    <main className="min-h-screen bg-background text-foreground">
+      <HeroVideo />
+    </main>
   );
 }

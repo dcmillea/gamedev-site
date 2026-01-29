@@ -16,7 +16,7 @@ export function ModeToggle() {
   const isDark = theme === "dark";
 
   return (
-    <Button variant="outline" size="icon-lg" onClick={() => setTheme(isDark ? "light" : "dark")} aria-label="Toggle theme">
+    <Button className="cursor-pointer" variant="outline" size="icon-lg" onClick={() => setTheme(isDark ? "light" : "dark")} aria-label="Toggle theme">
       {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </Button>
   );
