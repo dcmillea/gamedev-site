@@ -37,11 +37,7 @@ const DECOYS: Frag[] = [
   { id: "d_echo", src: "/media/glyphs/d_echo.png", kind: "decoy" },
   { id: "d_rebellion", src: "/media/glyphs/d_rebellion.png", kind: "decoy" },
   { id: "d_schism", src: "/media/glyphs/d_schism.png", kind: "decoy" },
-  {
-    id: "d_annihilation",
-    src: "/media/glyphs/d_annihilation.png",
-    kind: "decoy",
-  },
+  { id: "d_annihilation", src: "/media/glyphs/d_annihilation.png", kind: "decoy" },
   { id: "d_eclipse", src: "/media/glyphs/d_eclipse.png", kind: "decoy" },
 ];
 
@@ -70,26 +66,6 @@ function tileIsInN(tile: number) {
   return (N_PATH as readonly number[]).includes(tile);
 }
 
-function statusStyle(status?: GlyphStatus): React.CSSProperties | undefined {
-  if (!status) return undefined;
-  if (status === "acknowledged") {
-    return {
-      boxShadow:
-        "0 0 0 2px color-mix(in oklab, var(--color-green) 20%, transparent)",
-    };
-  }
-  if (status === "sanitized") {
-    return {
-      boxShadow:
-        "0 0 0 2px color-mix(in oklab, var(--color-blue) 18%, transparent)",
-    };
-  }
-  return {
-    boxShadow:
-      "0 0 0 2px color-mix(in oklab, var(--color-red) 20%, transparent)",
-  };
-}
-
 function seededShuffle<T>(items: T[], seed: number) {
   function mulberry32(a: number) {
     return function () {
@@ -108,25 +84,84 @@ function seededShuffle<T>(items: T[], seed: number) {
   return arr;
 }
 
+/**
+ * Create a rounded drag image that is visibly smaller inside (padding).
+ * IMPORTANT: We keep the ghost in the DOM until dragend (Chrome snapshots reliably).
+ */
+function buildDragGhost(src: string, opts: { size: number; radius: number; pad: number }) {
+  const { size, radius, pad } = opts;
+
+  const ghost = document.createElement("div");
+  ghost.style.width = `${size}px`;
+  ghost.style.height = `${size}px`;
+  ghost.style.borderRadius = `${radius}px`;
+  ghost.style.overflow = "hidden";
+  ghost.style.background = "rgba(10,10,12,0.55)";
+  ghost.style.border = "2px solid rgba(255,255,255,0.10)";
+  ghost.style.boxShadow = "0 18px 44px rgba(0,0,0,0.55)";
+  ghost.style.position = "fixed";
+  ghost.style.left = "-9999px";
+  ghost.style.top = "-9999px";
+  ghost.style.pointerEvents = "none";
+  ghost.style.zIndex = "2147483647";
+
+  const inner = document.createElement("div");
+  inner.style.position = "absolute";
+  inner.style.left = `${pad}px`;
+  inner.style.top = `${pad}px`;
+  inner.style.width = `${size - pad * 2}px`;
+  inner.style.height = `${size - pad * 2}px`;
+  inner.style.borderRadius = `${Math.max(10, radius - 4)}px`;
+  inner.style.overflow = "hidden";
+  inner.style.background = "rgba(255,255,255,0.04)";
+
+  const img = document.createElement("img");
+  img.src = src;
+  img.draggable = false;
+  img.style.width = "100%";
+  img.style.height = "100%";
+  img.style.objectFit = "cover";
+  img.style.display = "block";
+
+  inner.appendChild(img);
+  ghost.appendChild(inner);
+  document.body.appendChild(ghost);
+
+  return ghost;
+}
+
 export function PuzzleClient() {
   const [grid, setGrid] = React.useState<Record<number, string>>({});
   const [activeTile, setActiveTile] = React.useState<number | null>(null);
-  const [status, setStatus] = React.useState<"idle" | "loading" | "bad" | "ok">(
-    "idle",
-  );
+  const [status, setStatus] = React.useState<"idle" | "loading" | "bad" | "ok">("idle");
   const [correctCount, setCorrectCount] = React.useState<number | null>(null);
   const [msg, setMsg] = React.useState("");
   const [password, setPassword] = React.useState("");
 
   const usedIds = React.useMemo(() => new Set(Object.values(grid)), [grid]);
 
-  const seedRef = React.useRef<number>(
-    Math.floor(Math.random() * 1_000_000_000),
-  );
-  const tray = React.useMemo(
-    () => seededShuffle(FRAGMENTS, seedRef.current),
-    [],
-  );
+  // ✅ stable seed without impure render
+  const [seed] = React.useState(() => Math.floor(Math.random() * 1_000_000_000));
+  const tray = React.useMemo(() => seededShuffle(FRAGMENTS, seed), [seed]);
+
+  // Keep the current drag ghost alive until dragend
+  const dragGhostRef = React.useRef<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    const cleanup = () => {
+      if (dragGhostRef.current) {
+        dragGhostRef.current.remove();
+        dragGhostRef.current = null;
+      }
+    };
+    window.addEventListener("dragend", cleanup);
+    window.addEventListener("drop", cleanup);
+    return () => {
+      window.removeEventListener("dragend", cleanup);
+      window.removeEventListener("drop", cleanup);
+      cleanup();
+    };
+  }, []);
 
   function resetFeedback() {
     setStatus("idle");
@@ -152,13 +187,33 @@ export function PuzzleClient() {
 
   function handleDropOnTile(tile: number, payload: DragPayload) {
     resetFeedback();
-
     setGrid((prev) => {
       const next = { ...prev };
       if (payload.type === "from-grid") delete next[payload.fromTile];
       next[tile] = payload.imageId;
       return next;
     });
+  }
+
+  function onStartDrag(e: React.DragEvent, payload: DragPayload, src: string) {
+    // remove any previous ghost
+    if (dragGhostRef.current) {
+      dragGhostRef.current.remove();
+      dragGhostRef.current = null;
+    }
+
+    setDragData(e, payload);
+
+    // Tune these 3 values — they WILL change the ghost now.
+    const size = 96;
+    const radius = 18;
+    const pad = 14;
+
+    const ghost = buildDragGhost(src, { size, radius, pad });
+    dragGhostRef.current = ghost;
+
+    // Must happen during dragstart
+    e.dataTransfer.setDragImage(ghost, size / 2, size / 2);
   }
 
   async function submit() {
@@ -179,7 +234,6 @@ export function PuzzleClient() {
     });
 
     const data = await res.json().catch(() => ({}));
-
     const cc = typeof data.correctCount === "number" ? data.correctCount : null;
 
     if (!data?.ok) {
@@ -200,7 +254,7 @@ export function PuzzleClient() {
   }
 
   return (
-    <main className="relative min-h-dvh overflow-hidden bg-background text-foreground mt-20">
+    <main className="relative min-h-dvh overflow-x-hidden bg-background text-foreground mt-20 pb-24">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div
           className="absolute left-1/2 top-[-140px] h-[540px] w-[540px] -translate-x-1/2 rounded-full blur-[180px]"
@@ -243,10 +297,7 @@ export function PuzzleClient() {
           </p>
         </div>
 
-        <div
-          className="mt-10 grid gap-8 lg:grid-cols-[1fr_350px]"
-          style={{ maxHeight: "calc(100dvh - 240px)" }}
-        >
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_350px]">
           <section>
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
@@ -269,24 +320,20 @@ export function PuzzleClient() {
             <div className="mt-4 grid grid-cols-5 gap-2">
               {Array.from({ length: TILE_COUNT }).map((_, i) => {
                 const imageId = grid[i];
-                const frag = imageId
-                  ? FRAGMENTS.find((f) => f.id === imageId)
-                  : null;
+                const frag = imageId ? FRAGMENTS.find((f) => f.id === imageId) : null;
                 const isActive = activeTile === i;
                 const isN = tileIsInN(i);
 
                 return (
                   <div
                     key={i}
-                    className="group relative aspect-square rounded-xl border border-border bg-background"
+                    className="group relative aspect-square rounded-xl overflow-hidden border border-border bg-background"
                     onDragOver={(e) => {
                       e.preventDefault();
                       setActiveTile(i);
                       e.dataTransfer.dropEffect = "move";
                     }}
-                    onDragLeave={() =>
-                      setActiveTile((t) => (t === i ? null : t))
-                    }
+                    onDragLeave={() => setActiveTile((t) => (t === i ? null : t))}
                     onDrop={(e) => {
                       e.preventDefault();
                       const payload = getDragData(e);
@@ -315,29 +362,31 @@ export function PuzzleClient() {
                     ) : null}
 
                     {frag ? (
-                      <button
-                        className="relative h-full w-full"
+                      // ✅ Drag source is a DIV (not a button) so Chrome respects setDragImage more reliably
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        title="Click to remove"
+                        className="relative h-full w-full cursor-pointer"
                         draggable
                         onDragStart={(e) =>
-                          setDragData(e, {
-                            type: "from-grid",
-                            imageId: frag.id,
-                            fromTile: i,
-                          })
+                          onStartDrag(
+                            e,
+                            { type: "from-grid", imageId: frag.id, fromTile: i },
+                            frag.src,
+                          )
                         }
                         onClick={() => removeFromTile(i)}
-                        title="Click to remove"
-                        style={
-                          frag.kind === "real"
-                            ? statusStyle(frag.status)
-                            : undefined
-                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") removeFromTile(i);
+                        }}
                       >
                         <Image
                           src={frag.src}
                           alt=""
                           aria-hidden
                           fill
+                          draggable={false}
                           className="object-cover"
                         />
                         <span className="sr-only">
@@ -351,7 +400,7 @@ export function PuzzleClient() {
                               "linear-gradient(to top, color-mix(in oklab, var(--background) 92%, transparent), transparent)",
                           }}
                         />
-                      </button>
+                      </div>
                     ) : (
                       <div className="grid h-full w-full place-items-center">
                         <span className="text-[10px] text-muted-foreground opacity-70">
@@ -372,9 +421,7 @@ export function PuzzleClient() {
 
             {password && (
               <div className="mt-6 rounded-2xl border border-border bg-background p-5">
-                <p className="text-xs text-muted-foreground">
-                  PASSCODE UNLOCKED
-                </p>
+                <p className="text-xs text-muted-foreground">PASSCODE UNLOCKED</p>
                 <p className="mt-2 font-mono text-lg tracking-widest text-foreground">
                   {password}
                 </p>
@@ -391,34 +438,25 @@ export function PuzzleClient() {
               Drag into the grid. Click a placed tile to remove it.
             </p>
 
-            <div
-              className="mt-4 overflow-auto pr-1"
-              style={{ maxHeight: "calc(100dvh - 300px)" }}
-            >
+            <div className="mt-4 overflow-auto pr-1" style={{ maxHeight: "calc(100dvh - 300px)" }}>
               <div className="grid grid-cols-3 gap-2">
                 {tray.map((f) => {
                   const isUsed = usedIds.has(f.id);
-                  const isReal = f.kind === "real";
 
                   return (
                     <div
                       key={f.id}
                       className="relative overflow-hidden rounded-xl border border-border bg-background"
-                      style={
-                        isUsed
-                          ? { opacity: 0.35, filter: "grayscale(1)" }
-                          : undefined
-                      }
+                      style={isUsed ? { opacity: 0.35, filter: "grayscale(1)" } : undefined}
                     >
-                      <button
+                      <div
+                        className="relative block w-full"
+                        title={isUsed ? "Already placed" : "Drag"}
                         draggable={!isUsed}
                         onDragStart={(e) => {
                           if (isUsed) return;
-                          setDragData(e, { type: "from-tray", imageId: f.id });
+                          onStartDrag(e, { type: "from-tray", imageId: f.id }, f.src);
                         }}
-                        className="relative block w-full"
-                        title={isUsed ? "Already placed" : "Drag"}
-                        style={isReal ? statusStyle(f.status) : undefined}
                       >
                         <div className="relative aspect-square">
                           <Image
@@ -426,16 +464,17 @@ export function PuzzleClient() {
                             alt=""
                             aria-hidden
                             fill
+                            draggable={false}
                             className="object-cover"
                           />
                         </div>
 
                         <span className="sr-only">
-                          {isReal ? "Glyph fragment" : "Decoy fragment"}
+                          {f.kind === "real" ? "Glyph fragment" : "Decoy fragment"}
                         </span>
 
                         <div className="h-2" />
-                      </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -443,15 +482,11 @@ export function PuzzleClient() {
             </div>
 
             <div className="mt-5 rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground">
-              Placed:{" "}
-              <span className="text-foreground">
-                {Object.keys(grid).length}
-              </span>
+              Placed: <span className="text-foreground">{Object.keys(grid).length}</span>
             </div>
 
             <div className="mt-4 text-xs text-muted-foreground">
-              <span className="opacity-70">Note:</span> not every fragment
-              belongs to the canon.
+              <span className="opacity-70">Note:</span> not every fragment belongs to the canon.
             </div>
           </aside>
         </div>

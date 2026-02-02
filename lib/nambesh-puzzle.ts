@@ -2,7 +2,13 @@ export const GRID_SIZE = 5
 export const TILE_COUNT = GRID_SIZE * GRID_SIZE
 
 // N-shape traversal order (13 tiles)
-export const N_PATH = [0, 5, 10, 15, 20, 6, 12, 18, 4, 9, 14, 19, 24] as const
+export const N_PATH = [
+  0, 4,        // row 0 (left + right)
+  5, 6, 9,     // row 1 (left + diagonal + right)
+  10, 12, 14,  // row 2 (left + diagonal + right)
+  15, 18, 19,  // row 3 (left + diagonal + right)
+  20, 24       // row 4 (left + right)
+] as const
 
 // Canonical story order (13 glyphs)
 export const CANON_ORDER = [
