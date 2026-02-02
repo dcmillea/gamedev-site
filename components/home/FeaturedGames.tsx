@@ -1,6 +1,12 @@
 import * as React from "react";
 import Link from "next/link";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import nambeshGameCover from "@/public/nambesh.png";
@@ -21,30 +27,33 @@ type Game = {
 const GAMES: Game[] = [
   {
     title: "Nambesh",
-    blurb: "Story-driven FPS where you play as a space soldier, fighting over the alien planet of Nambesh.",
+    blurb:
+      "Story-driven FPS where you play as a space soldier, fighting over the alien planet of Nambesh.",
     status: "In Development",
     tags: ["UE5", "Single Player", "Sci-Fi"],
     href: "/games/nambesh",
     image: nambeshGameCover.src,
-    accent: "blue"
+    accent: "blue",
   },
   {
     title: "CodeName: SW",
-    blurb: "details are tricky... I once thought that the details were tricky, and I still do!",
+    blurb:
+      "details are tricky... I once thought that the details were tricky, and I still do!",
     status: "Loading...",
     tags: ["UE5", "Multiplayer", "Modern"],
-    href: "/games/codename_sw",
+    href: "/games",
     image: codename_sw.src,
-    accent: "green"
+    accent: "green",
   },
   {
     title: "CodeName: C3_F2",
-    blurb: "details are tricky... I once thought that the details were tricky, and I still do!",
+    blurb:
+      "details are tricky... I once thought that the details were tricky, and I still do!",
     status: "Loading...",
     tags: ["UE5", "FPS", "Big"],
-    href: "/games/codename_c3_f2",
+    href: "/games",
     image: codename_c3_f2.src,
-    accent: "red"
+    accent: "red",
   },
 ];
 
@@ -65,20 +74,27 @@ export function FeaturedGames() {
     <section aria-labelledby="featured-games" className="relative w-full">
       <div className="absolute inset-0 -z-10">
         <div className="h-full w-full bg-background" />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-border"/>
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-border" />
       </div>
 
       <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between gap-4">  
+        <div className="flex items-end justify-between gap-4">
           <div className="max-w-2xl">
             <p className="text-sm tracking-wide text-muted-foreground">
               Just some, well, games.
             </p>
-            <h2 id="featured-games" className="mt-2 text-balance text-2xl font-semibold text-foreground sm:text-3xl">
+            <h2
+              id="featured-games"
+              className="mt-2 text-balance text-2xl font-semibold text-foreground sm:text-3xl"
+            >
               Featured Games
             </h2>
             <p className="mt-3 text-pretty text-muted-foreground">
-              A snapshot of what&apos;s to come, check out the <Link className="text-blue hover:text-green" href={"/devlogs"}>devlogs</Link> for more updates! 
+              A snapshot of what&apos;s to come, check out the{" "}
+              <Link className="text-blue hover:text-green" href={"/devlogs"}>
+                devlogs
+              </Link>{" "}
+              for more updates!
             </p>
           </div>
 
@@ -89,27 +105,50 @@ export function FeaturedGames() {
 
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {GAMES.map((g) => (
-            <Card key={g.title} style={accentVars(g.accent)}
-            className={["group relative overflow-hidden", "border border-border bg-background", "transition-transform duration-200 will-change-transform", "hover:-translate-y-0.5", ].join(" ")}>
-              <div aria-hidden className={[
+            <Card
+              key={g.title}
+              style={accentVars(g.accent)}
+              className={[
+                "group relative overflow-hidden",
+                "border border-border bg-background",
+                "transition-transform duration-200 will-change-transform",
+                "hover:-translate-y-0.5",
+              ].join(" ")}
+            >
+              <div
+                aria-hidden
+                className={[
                   "pointer-events-none absolute inset-0",
                   "opacity-0 transition-opacity duration-200 group-hover:opacity-100",
                 ].join(" ")}
                 style={{
-                  boxShadow: "0 0 0 1px color-mix(in oklab, var(--accent) 38%, transparent)",
+                  boxShadow:
+                    "0 0 0 1px color-mix(in oklab, var(--accent) 38%, transparent)",
                 }}
               />
 
               <CardHeader className="space-y-3">
-                <div className="flex items-center justify-between gap-3"> 
-                  <Badge variant="secondary" className="border border-border bg-background text-foreground">
+                <div className="flex items-center justify-between gap-3">
+                  <Badge
+                    variant="secondary"
+                    className="border border-border bg-background text-foreground"
+                  >
                     {g.status}
                   </Badge>
 
-                  <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: "color-mix(in oklab, var(--accent) 80%, transparent)" }} />
+                  <span
+                    aria-hidden
+                    className="h-2 w-2 rounded-full"
+                    style={{
+                      background:
+                        "color-mix(in oklab, var(--accent) 80%, transparent)",
+                    }}
+                  />
                 </div>
 
-                <CardTitle className="text-lg text-foreground">{g.title}</CardTitle>
+                <CardTitle className="text-lg text-foreground">
+                  {g.title}
+                </CardTitle>
                 <p className="text-sm text-muted-foreground">{g.blurb}</p>
               </CardHeader>
 
@@ -135,7 +174,7 @@ export function FeaturedGames() {
                   ))}
                 </div>
               </CardContent>
-              
+
               <CardFooter className="flex items-center justify-between gap-3">
                 <Button asChild className="w-full">
                   <Link href={g.href}>View game</Link>
@@ -146,5 +185,5 @@ export function FeaturedGames() {
         </div>
       </div>
     </section>
-  )
+  );
 }

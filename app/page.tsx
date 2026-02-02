@@ -1,7 +1,8 @@
-import { FeaturedGames } from "@/components/FeaturedGames";
-import { Guides } from "@/components/Guides";
-import HeroVideo from "@/components/HeroVideo";
-import { LatestDevlogs } from "@/components/LatestDevlogs";
+import { FollowTheBuild } from "@/components/home/FollowTheBuild";
+import { FeaturedGames } from "@/components/home/FeaturedGames";
+import { Guides } from "@/components/home/Guides";
+import HeroVideo from "@/components/home/HeroVideo";
+import { LatestDevlogs } from "@/components/home/LatestDevlogs";
 
 export default function HomePage() {
   return (
@@ -10,6 +11,7 @@ export default function HomePage() {
       <FeaturedGames />
       <LatestDevlogs />
       <Guides />
+      <FollowTheBuild />
     </main>
   );
 }

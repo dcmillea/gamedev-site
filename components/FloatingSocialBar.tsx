@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ModeToggle } from "./mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Instagram, Twitter, Youtube, Music2, Facebook } from "lucide-react";
+import { TerminalToggle } from "./eastereggs/TerminalToggle";
 
 type Social = {
   label: string;
@@ -22,7 +23,7 @@ const socials: Social[] = [
 
 export default function FloatingSocialBar() {
   return (
-    <aside className="fixed right-8 bottom-6 z-50 hidden md:block">
+    <aside className="fixed right-8 bottom-20 z-50 hidden md:block">
       <div
         className="
           flex w-14 flex-col items-center
@@ -35,6 +36,11 @@ export default function FloatingSocialBar() {
         {/* Theme toggle — same box as icons */}
         <div className="flex h-10 w-10 items-center justify-center rounded-sm">
           <ModeToggle />
+        </div>
+
+        {/* What is this? */}
+        <div className="flex h-10 w-10 items-center justify-center rounded-sm">
+          <TerminalToggle />
         </div>
 
         {/* Divider (tight) */}
