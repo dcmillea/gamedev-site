@@ -13,7 +13,7 @@ export function GuidesGridSection({
   categories: GuideCategory[];
 }) {
   return (
-    <section aria-labelledby="guides-title" className="relative w-full">
+    <section aria-labelledby="guides-title" className="relative w-full pt-6 md:pt-24">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-sm text-muted-foreground">Evergreen knowledge</p>

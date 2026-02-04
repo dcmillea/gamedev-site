@@ -10,6 +10,7 @@ export default function GuidesPage() {
         title="Guides"
         subtitle="Practical writeups on Unreal, Blender, and Game Design."
         guides={GUIDES}
+        // eslint-disable-next-line
         categories={categories as any}
       ></GuidesGridSection>
     </main>

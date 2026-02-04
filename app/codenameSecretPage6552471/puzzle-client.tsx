@@ -473,7 +473,6 @@ export function PuzzleClient() {
                           {f.kind === "real" ? "Glyph fragment" : "Decoy fragment"}
                         </span>
 
-                        <div className="h-2" />
                       </div>
                     </div>
                   );

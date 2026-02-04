@@ -9,6 +9,9 @@ export default function YouFiguredItOutPage() {
         This page will reveal more details about the next game. (We can design
         this next.)
       </p>
+      <p className="mt-4 text-muted-foreground">
+        It will have secret codes for the next game that give users cool insight. Also some of the game design document (even if parts are fake to play it up)
+      </p>
     </main>
   );
 }
